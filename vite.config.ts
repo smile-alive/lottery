@@ -45,6 +45,13 @@ export default defineConfig(({ mode }) => {
 				},
 			},
 		],
+		css: {
+			preprocessorOptions: {
+				scss: {
+					additionalData: `@use "@/assets/css/mixin.scss" as *;`,
+				},
+			},
+		},
 		resolve: {
 			alias: {
 				'@': fileURLToPath(new URL('./src', import.meta.url)),

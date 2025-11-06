@@ -1,6 +1,7 @@
-import type { Data } from '@/global.utils';
 import { motion } from 'framer-motion';
-import { getWinnersFromSession, saveWinnersToSession } from '@/global.utils';
+import { WINNERS_SESSION_KEY } from '@/config/storage-key';
+import { getItem, setItem } from '@/utils/local-storage';
+import CardItem from './CardItem';
 
 export default function AdventurePrize({ participants }: { participants: Data[] }) {
 	const [isDrawing, setIsDrawing] = useState(false);
@@ -10,8 +11,8 @@ export default function AdventurePrize({ participants }: { participants: Data[] 
 
 	// 返回未中奖的候选人
 	const getAvailableParticipants = () => {
-		const allWinners = getWinnersFromSession();
-		return participants.filter(p => !allWinners.some(w => w.phone === p.phone));
+		const allWinners = getItem<Data[]>(WINNERS_SESSION_KEY, { type: 'session' });
+		return participants.filter(p => !allWinners?.some(w => w.phone === p.phone));
 	};
 
 	const startDraw = () => {
@@ -35,9 +36,9 @@ export default function AdventurePrize({ participants }: { participants: Data[] 
 	const nextDraw = () => {
 		setIsDrawing(true);
 		intervalRef.current = setInterval(() => {
-			const allWinners = getWinnersFromSession();
+			const allWinners = getItem<Data[]>(WINNERS_SESSION_KEY, { type: 'session' });
 			const firstRoundWinners = winners.slice(0, 5);
-			const candidates = participants.filter(p => !allWinners.some(w => w.phone === p.phone) && !firstRoundWinners.some(w => w.phone === p.phone));
+			const candidates = participants.filter(p => !allWinners?.some(w => w.phone === p.phone) && !firstRoundWinners.some(w => w.phone === p.phone));
 			if (candidates.length < 5) {
 				setWinners([...firstRoundWinners, ...candidates]);
 				return;
@@ -60,11 +61,11 @@ export default function AdventurePrize({ participants }: { participants: Data[] 
 
 		setIsDrawing(false);
 		// 把新中奖的加入sessionStorage
-		const sessionWinners = getWinnersFromSession();
+		const sessionWinners = getItem<Data[]>(WINNERS_SESSION_KEY, { type: 'session' }) ?? [];
 		const sessionPhones = sessionWinners.map(w => w.phone);
 		const newWinners = winners.filter(w => !sessionPhones.includes(w.phone));
 		if (newWinners.length) {
-			saveWinnersToSession([...sessionWinners, ...newWinners]);
+			setItem(WINNERS_SESSION_KEY, [...sessionWinners, ...newWinners], { type: 'session' });
 		}
 	};
 
@@ -82,65 +83,38 @@ export default function AdventurePrize({ participants }: { participants: Data[] 
 				<p className='section-subtitle'>每轮抽取 5 位获奖者 共2轮</p>
 			</div>
 
-			<div className='card card-blue'>
+			<div className='card'>
 				{!!winners.length && (
-					<div className='number-grid'>
+					<div
+						style={{
+							width: '80vw',
+							display: 'grid',
+							flex: 1,
+							gridTemplateColumns: 'repeat(5, 1fr)',
+							gap: '1rem',
+						}}
+					>
 						{winners.map((participant, index) => {
 							const shouldAnimate = isDrawing && (winners.length / 2 === 1 ? index < 5 : index >= 5);
-
-							return (
-								<motion.div
-									key={index}
-									initial={{ scale: 0.8, opacity: 0 }}
-									animate={{ scale: 1, opacity: 1 }}
-									className='number-box number-box-blue'
-								>
-									<motion.div
-										animate={
-											shouldAnimate
-												? {
-														scale: [1, 1.1, 1],
-														transition: { repeat: Infinity, duration: 0.5 },
-													}
-												: {}
-										}
-										className='name-text'
-									>
-										{participant.name}
-									</motion.div>
-									<motion.div
-										animate={
-											shouldAnimate
-												? {
-														scale: [1, 1.05, 1],
-														transition: { repeat: Infinity, duration: 0.5 },
-													}
-												: {}
-										}
-										className='number-text'
-									>
-										{participant.phone}
-									</motion.div>
-								</motion.div>
-							);
+							return <CardItem key={index} showAnimate={shouldAnimate} {...participant} />;
 						})}
 					</div>
 				)}
 
 				{!isDrawing && winners.length === 0 && (
-					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={startDraw} className='button button-blue'>
+					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={startDraw} className='button'>
 						开始抽奖
 					</motion.button>
 				)}
 
 				{!isDrawing && winners.length === 5 && (
-					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={nextDraw} className='button button-blue'>
+					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={nextDraw} className='button'>
 						下一轮
 					</motion.button>
 				)}
 
 				{isDrawing && (
-					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={stopDraw} className='button button-red'>
+					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={stopDraw} className='button'>
 						停止
 					</motion.button>
 				)}

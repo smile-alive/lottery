@@ -3,12 +3,6 @@ import AdventurePrize from '@/components/AdventurePrize';
 import Loading from '@/components/Loading';
 import TreasurePrize from '@/components/TreasurePrize';
 
-interface ApiResponse {
-	success: boolean;
-	records?: { name: string; phone: string }[];
-	error?: { message: string };
-}
-
 export const fetchData = async () => {
 	try {
 		const [response] = await Promise.all([fetch('/admin/api/cy_10_years_checkin/export'), new Promise(resolve => setTimeout(resolve, 1000))]);
@@ -38,10 +32,10 @@ function Setup({ promise }: { promise: ReturnType<typeof fetchData> }) {
 	return (
 		<div className='container'>
 			<div className='tab-buttons'>
-				<button className={clsx(['tab-button', 'tab-button-blue', { active: activeTab === 'adventure' }])} onClick={() => setActiveTab('adventure')}>
+				<button className={clsx(['tab-button', { active: activeTab === 'adventure' }])} onClick={() => setActiveTab('adventure')}>
 					探险奖
 				</button>
-				<button className={clsx(['tab-button', 'tab-button-orange', { active: activeTab === 'treasure' }])} onClick={() => setActiveTab('treasure')}>
+				<button className={clsx(['tab-button', { active: activeTab === 'treasure' }])} onClick={() => setActiveTab('treasure')}>
 					夺宝奖
 				</button>
 			</div>

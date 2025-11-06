@@ -1,6 +1,7 @@
-import type { Data } from '@/global.utils';
 import { motion } from 'framer-motion';
-import { getWinnersFromSession, saveWinnersToSession } from '@/global.utils';
+import { WINNERS_SESSION_KEY } from '@/config/storage-key';
+import { getItem, setItem } from '@/utils/local-storage';
+import CardItem from './CardItem';
 
 export default function TreasurePrize({ participants }: { participants: Data[] }) {
 	const [isDrawing, setIsDrawing] = useState(false);
@@ -8,8 +9,8 @@ export default function TreasurePrize({ participants }: { participants: Data[] }
 	const intervalRef = useRef<NodeJS.Timeout>(null);
 
 	const getAvailableParticipants = () => {
-		const allWinners = getWinnersFromSession();
-		return participants.filter(p => !allWinners.some(w => w.phone === p.phone));
+		const allWinners = getItem<Data[]>(WINNERS_SESSION_KEY, { type: 'session' });
+		return participants.filter(p => !allWinners?.some(w => w.phone === p.phone));
 	};
 
 	const startDraw = () => {
@@ -32,9 +33,9 @@ export default function TreasurePrize({ participants }: { participants: Data[] }
 		}
 		setIsDrawing(false);
 		if (winner) {
-			const sessionWinners = getWinnersFromSession();
+			const sessionWinners = getItem<Data[]>(WINNERS_SESSION_KEY, { type: 'session' }) ?? [];
 			if (!sessionWinners.some(w => w.phone === winner.phone)) {
-				saveWinnersToSession([...sessionWinners, winner]);
+				setItem(WINNERS_SESSION_KEY, [...sessionWinners, winner], { type: 'session' });
 			}
 		}
 	};
@@ -50,53 +51,18 @@ export default function TreasurePrize({ participants }: { participants: Data[] }
 		<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className='section'>
 			<div className='section-header'>
 				<h2 className='section-title'>抽取 1 位 SVIP 会员 + 苹果手机</h2>
+				<p className='section-subtitle'>iPhone17为白色基础款，直接发放，无法代领</p>
 			</div>
 
-			<div className='card card-orange'>
-				{!!winner && (
-					<motion.div
-						initial={{
-							scale: 0.8,
-							opacity: 0,
-						}}
-						animate={{ scale: 1, opacity: 1 }}
-						className='number-box number-box-orange'
-					>
-						<motion.div
-							animate={
-								isDrawing
-									? {
-											scale: [1, 1.1, 1],
-											transition: { repeat: Infinity, duration: 0.5 },
-										}
-									: {}
-							}
-							className='name-text'
-						>
-							{winner.name}
-						</motion.div>
-						<motion.div
-							animate={
-								isDrawing
-									? {
-											scale: [1, 1.05, 1],
-											transition: { repeat: Infinity, duration: 0.5 },
-										}
-									: {}
-							}
-							className='number-text'
-						>
-							{winner.phone}
-						</motion.div>
-					</motion.div>
-				)}
+			<div className='card'>
+				{!!winner && <CardItem showAnimate={isDrawing} {...winner} style={{ width: '30vw' }} />}
 
 				{isDrawing ? (
-					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={stopDraw} className='button button-red'>
+					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={stopDraw} className='button'>
 						停止
 					</motion.button>
 				) : (
-					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={startDraw} className='button button-orange'>
+					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={startDraw} className={clsx(['button', { again: winner }])}>
 						{winner ? '人没在场？再抽一次' : '开始抽奖'}
 					</motion.button>
 				)}

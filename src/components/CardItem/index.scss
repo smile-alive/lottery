@@ -1,0 +1,28 @@
+.card-item {
+	padding: 0.3rem;
+	border: 0.25rem solid rgb(243, 188, 118);
+	border-radius: 2rem;
+
+	&-content {
+		display: flex;
+		flex-direction: column;
+		row-gap: 0.5rem;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		padding: 0.75rem 1rem;
+		font-weight: 800;
+		color: rgb(125, 29, 16);
+		background-color: rgb(244, 217, 183);
+		border-radius: calc(2rem - 0.5rem);
+
+		.name-text {
+			@include font-size(text-3xl);
+			letter-spacing: 10px;
+		}
+
+		.number-text {
+			@include font-size(text-2xl);
+		}
+	}
+}

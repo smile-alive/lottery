@@ -16,3 +16,16 @@ interface ImportMetaEnv {
 interface ImportMeta {
 	readonly env: ImportMetaEnv;
 }
+
+global {
+	interface Data {
+		name: string;
+		phone: string;
+	}
+
+	interface ApiResponse {
+		success: boolean;
+		records?: Data[];
+		error?: { message: string };
+	}
+}
